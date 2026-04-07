@@ -353,6 +353,13 @@ class UserController extends Controller
             return back()->with('error', 'Data gaji tidak ditemukan.');
         }
 
+        // === AMBIL DATA BENDAHARA DARI DATABASE ===
+        $bendahara = [
+            'nama'    => DB::table('settings')->where('key', 'bendahara_nama')->value('value') ?? 'I Wayan Sudirta',
+            'nip'     => DB::table('settings')->where('key', 'bendahara_nip')->value('value') ?? '-',
+            'jabatan' => DB::table('settings')->where('key', 'bendahara_jabatan')->value('value') ?? 'Pejabat Pengelola Administrasi Belanja Pegawai',
+        ];
+
         // 3. Nama File ZIP
         $zipFileName = 'Arsip_Gaji_' . $month . '_' . $year . '.zip';
         $zipFilePath = $path . '/' . $zipFileName;
@@ -367,7 +374,7 @@ class UserController extends Controller
                 $terbilang = ucwords($this->terbilang($salary->take_home_pay) . ' rupiah');
 
                 // Generate PDF
-                $pdf = Pdf::loadView('admin.salary.print', compact('salary', 'terbilang'));
+                $pdf = Pdf::loadView('admin.salary.print', compact('salary', 'terbilang', 'bendahara'));
                 
                 // Bersihkan nama file (Hanya huruf, angka, dan strip)
                 $cleanName = preg_replace('/[^A-Za-z0-9\-]/', '_', trim($salary->user->name));

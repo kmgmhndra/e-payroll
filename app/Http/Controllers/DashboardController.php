@@ -35,14 +35,14 @@ class DashboardController extends Controller
             // Clone query agar tidak mengganggu query salary terbaru nanti
             $salaries = (clone $query)
                 ->orderBy('year', 'desc')
-                ->orderByRaw("FIELD(month, 'Desember', 'November', 'Oktober', 'September', 'Agustus', 'Juli', 'Juni', 'Mei', 'April', 'Maret', 'Januari')")
+                ->orderByRaw("FIELD(month, 'Desember', 'November', 'Oktober', 'September', 'Agustus', 'Juli', 'Juni', 'Mei', 'April', 'Maret', 'Februari', 'Januari')")
                 ->get();
 
             // 4. Ambil Slip Paling Baru (Tanpa Filter - Selalu tampilkan yang terbaru di kartu atas)
             // Kita ambil dari database langsung tanpa filter agar kartu "Terbaru" tidak hilang saat difilter
             $latestSalary = Salary::where('user_id', $user->id)
                             ->orderBy('year', 'desc')
-                            ->orderByRaw("FIELD(month, 'Desember', 'November', 'Oktober', 'September', 'Agustus', 'Juli', 'Juni', 'Mei', 'April', 'Maret', 'Januari')")
+                            ->orderByRaw("FIELD(month, 'Desember', 'November', 'Oktober', 'September', 'Agustus', 'Juli', 'Juni', 'Mei', 'April', 'Maret', 'Februari', 'Januari')")
                             ->first();
 
             // 5. Ambil Daftar Tahun yang tersedia (Untuk Dropdown)

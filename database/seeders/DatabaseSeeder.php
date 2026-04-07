@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         $userRole = Role::create(['name' => 'pegawai']);
 
         // 2. Buat Akun Admin (Contoh Admin Kemenkumham)
-        $admin = User::factory()->create([
+        $admin = User::create([
             'name' => 'Admin Kemenkum',
             'email' => 'admin@kemenkum.go.id',
             'nip' => '199001012020011001',
