@@ -1,6 +1,6 @@
 <x-app-layout>
 
-    <div class="max-w-5xl mx-auto space-y-8">
+    <div class="max-w-7xl mx-auto space-y-8">
         
         <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
             <div class="flex items-center gap-6">
@@ -51,7 +51,7 @@
                     </div>
                 </div>
 
-                <!-- <div class="bg-red-50 p-8 rounded-2xl border border-red-100 shadow-sm">
+                <div class="bg-red-50 p-8 rounded-2xl border border-red-100 shadow-sm">
                     <div class="mb-6">
                         <h4 class="text-lg font-bold text-red-900">Hapus Akun</h4>
                         <p class="text-sm text-red-700 opacity-80">Tindakan ini permanen dan data Anda tidak dapat dipulihkan.</p>
@@ -59,7 +59,7 @@
                     <div class="max-w-xl">
                         <livewire:profile.delete-user-form />
                     </div>
-                </div> -->
+                </div>
 
             </div>
         </div>

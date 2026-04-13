@@ -9,6 +9,16 @@ export default defineConfig({
         }),
     ],
 
+    // server: { // Custom config ini hanya untuk Docker, matikan untuk Laragon
+    //     watch: {
+    //         usePolling: true,
+    //     },
+    //     host: '0.0.0.0',
+    //     hmr: {
+    //         host: 'localhost',
+    //     },
+    // },
+
     // server: {
     //     host: '0.0.0.0', // Ini memaksa Vite listen ke semua IP (Wi-Fi)
     //     cors: true,
