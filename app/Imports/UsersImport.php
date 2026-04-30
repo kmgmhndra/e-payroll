@@ -32,6 +32,9 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmpty
                 'name'              => $row['nama'],
                 'email'             => $row['email'],
                 'no_rekening'       => $row['no_rekening'] ?? null,
+                'pangkat_golongan'  => $row['pangkat_golongan'] ?? null,
+                'jabatan'           => $row['jabatan'] ?? null,
+                'grade'             => $row['grade'] ?? null,
                 'password'          => Hash::make($password),
                 'email_verified_at' => now(), // Auto verify
             ]

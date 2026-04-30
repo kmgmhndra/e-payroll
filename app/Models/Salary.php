@@ -17,7 +17,6 @@ class Salary extends Model
     protected $casts = [
         'income_details'    => 'encrypted:array',    // <--- Ubah jadi encrypted
         'deduction_details' => 'encrypted:array',    // <--- Ubah jadi encrypted
-        // 'take_home_pay'  => 'encrypted',          // (Opsional) Jika ingin total gaji juga rahasia
     ];
 
     protected $guarded = [];
@@ -32,13 +31,10 @@ class Salary extends Model
     | ACCESSOR (OPTIMALISASI LOGIKA)
     |--------------------------------------------------------------------------
     | Data ini dihitung di level aplikasi (PHP), bukan database.
-    | Sangat menghemat ruang database karena kita tidak perlu menyimpan kolom 
-    | 'total_income' yang statis jika detailnya berubah.
     */
 
     public function getTotalIncomeAttribute()
     {
-        // Null Coalescing Operator (??) agar tidak error jika data kosong
         return array_sum($this->income_details ?? []);
     }
 
@@ -49,7 +45,31 @@ class Salary extends Model
 
     public function getTakeHomePayAttribute()
     {
-        // Kita hitung dinamis agar selalu akurat dengan detail terbaru
         return $this->total_income - $this->total_deduction;
+    }
+
+    /**
+     * Helper: Mendapatkan nama bulan sebelumnya dalam Bahasa Indonesia.
+     * Contoh: Jika salary->month = "Januari" dan year = 2026 → "Desember 2025"
+     */
+    public function getBulanSebelumnyaAttribute()
+    {
+        $bulanList = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+
+        $currentIndex = array_search($this->month, $bulanList);
+        
+        if ($currentIndex === false) {
+            return $this->month; // Fallback
+        }
+
+        if ($currentIndex === 0) {
+            // Januari → Desember tahun sebelumnya
+            return 'Desember ' . ($this->year - 1);
+        }
+
+        return $bulanList[$currentIndex - 1] . ' ' . $this->year;
     }
 }

@@ -32,7 +32,7 @@ return new class extends Migration
             ],
             [
                 'key' => 'bendahara_jabatan', 
-                'value' => 'Pejabat Pengelola Administrasi Belanja Pegawai'
+                'value' => 'Bend. Gaji/PPABP'
             ],
         ]);
     }

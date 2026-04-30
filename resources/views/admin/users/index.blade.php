@@ -148,10 +148,13 @@
                                     NIP
                                 </th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                    Role
+                                    Pangkat/Gol
                                 </th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                    Status
+                                    Jabatan
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    Role
                                 </th>
                                 <th class="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
                                     Aksi
@@ -178,6 +181,15 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="text-sm font-mono font-medium text-slate-700">{{ $user->nip }}</span>
                                 </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-700">{{ $user->pangkat_golongan ?? '-' }}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-slate-700">{{ $user->jabatan ?? '-' }}</div>
+                                    @if($user->grade)
+                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded mt-1">Grade {{ $user->grade }}</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if(($user->getRoleNames()[0] ?? 'Pegawai') === 'admin')
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200">
@@ -194,12 +206,6 @@
                                             Pegawai
                                         </span>
                                     @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-lg">
-                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                                        Aktif
-                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -224,7 +230,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-16 text-center">
+                                <td colspan="6" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="h-16 w-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
                                             <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -354,6 +360,40 @@
                             name="no_rekening" 
                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
                             placeholder="Contoh: 1234567890">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Pangkat/Golongan
+                        </label>
+                        <input 
+                            type="text" 
+                            name="pangkat_golongan" 
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                            placeholder="Contoh: IV/c Pembina Utama Muda">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Jabatan
+                            </label>
+                            <input 
+                                type="text" 
+                                name="jabatan" 
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                placeholder="Contoh: Kepala Divisi">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Grade
+                            </label>
+                            <input 
+                                type="number" 
+                                name="grade" 
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                placeholder="Contoh: 14">
+                        </div>
                     </div>
                     
                     <!-- Info Box -->
@@ -599,6 +639,40 @@
                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
                             placeholder="Nomor Rekening Bank">
                     </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Pangkat/Golongan
+                        </label>
+                        <input 
+                            type="text" 
+                            x-model="editingUser.pangkat_golongan" 
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                            placeholder="Contoh: IV/c Pembina Utama Muda">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Jabatan
+                            </label>
+                            <input 
+                                type="text" 
+                                x-model="editingUser.jabatan" 
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                placeholder="Contoh: Kepala Divisi">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Grade
+                            </label>
+                            <input 
+                                type="number" 
+                                x-model="editingUser.grade" 
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                placeholder="Contoh: 14">
+                        </div>
+                    </div>
                     
                     <!-- Action Buttons -->
                     <div class="flex gap-3 pt-2">
@@ -706,7 +780,10 @@
                     name: user.name,
                     nip: user.nip,
                     email: user.email,
-                    no_rekening: user.no_rekening
+                    no_rekening: user.no_rekening,
+                    pangkat_golongan: user.pangkat_golongan,
+                    jabatan: user.jabatan,
+                    grade: user.grade
                 };
 
                 fetch(`/admin/users/${userId}`, {

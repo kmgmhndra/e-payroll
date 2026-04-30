@@ -20,8 +20,11 @@ class SettingController extends Controller
     {
         $request->validate([
             'bendahara_nama' => 'required|string',
-            'bendahara_nip' => 'required|numeric',
+            'bendahara_nip' => 'required|string',
             'bendahara_jabatan' => 'required|string',
+            'kabag_umum_nama' => 'required|string',
+            'kabag_umum_nip' => 'required|string',
+            'kabag_umum_jabatan' => 'required|string',
         ]);
 
         // Update atau Insert data ke tabel settings
@@ -29,6 +32,9 @@ class SettingController extends Controller
             'bendahara_nama' => $request->bendahara_nama,
             'bendahara_nip' => $request->bendahara_nip,
             'bendahara_jabatan' => $request->bendahara_jabatan,
+            'kabag_umum_nama' => $request->kabag_umum_nama,
+            'kabag_umum_nip' => $request->kabag_umum_nip,
+            'kabag_umum_jabatan' => $request->kabag_umum_jabatan,
         ];
 
         foreach ($data as $key => $value) {
@@ -38,6 +44,6 @@ class SettingController extends Controller
             );
         }
 
-        return redirect()->back()->with('success', 'Data Bendahara berhasil diperbarui!');
+        return redirect()->back()->with('success', 'Data Pejabat berhasil diperbarui!');
     }
 }

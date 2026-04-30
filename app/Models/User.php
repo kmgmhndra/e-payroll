@@ -24,6 +24,9 @@ class User extends Authenticatable
         'password',
         'nip',
         'no_rekening',
+        'pangkat_golongan',
+        'jabatan',
+        'grade',
         'email_verified_at',
     ];
 

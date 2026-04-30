@@ -74,7 +74,7 @@ class UserController extends Controller
      */
     public function showImportSalary()
     {
-        // 1. Ambil Riwayat Gaji (Kodingan Lama Bapak - TETAP)
+        // 1. Ambil Riwayat Gaji
         $salaryHistory = Salary::select('month', 'year')
             ->distinct()
             ->orderBy('year', 'desc')
@@ -82,13 +82,12 @@ class UserController extends Controller
             ->limit(10)
             ->get();
         
-        // 2. [BARU] Tambahkan ini: Hitung Total Pegawai
-        // Ini akan menghitung user yang punya role 'pegawai' saja (admin tidak dihitung)
+        // 2. Hitung Total Pegawai
         $total_pegawai = User::role('pegawai')->count();
 
-        // 3. Update return view (Tambahkan 'total_pegawai' ke dalam compact)
         return view('admin.import-salary', compact('salaryHistory', 'total_pegawai'));
     }
+
     /**
      * Simpan Pegawai Baru (Manual).
      */
@@ -99,10 +98,12 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'nip' => 'required|string|unique:users,nip',
             'no_rekening' => 'nullable|numeric',
+            'pangkat_golongan' => 'nullable|string|max:255',
+            'jabatan' => 'nullable|string|max:255',
+            'grade' => 'nullable|integer',
         ]);
 
-        // LOGIKA PASSWORD DISAMAKAN DENGAN IMPORT EXCEL
-        // Prioritas: No Rekening -> Jika kosong pakai NIP
+        // LOGIKA PASSWORD: Prioritas No Rekening -> NIP
         $password = !empty($request->no_rekening) ? $request->no_rekening : $request->nip;
 
         $user = User::create([
@@ -110,6 +111,9 @@ class UserController extends Controller
             'email' => $request->email,
             'nip' => $request->nip,
             'no_rekening' => $request->no_rekening,
+            'pangkat_golongan' => $request->pangkat_golongan,
+            'jabatan' => $request->jabatan,
+            'grade' => $request->grade,
             'password' => bcrypt($password), 
             'email_verified_at' => now(),
         ]);
@@ -130,6 +134,9 @@ class UserController extends Controller
                 'email' => 'required|email|unique:users,email,' . $user->id,
                 'nip' => 'required|string|unique:users,nip,' . $user->id,
                 'no_rekening' => 'nullable|numeric',
+                'pangkat_golongan' => 'nullable|string|max:255',
+                'jabatan' => 'nullable|string|max:255',
+                'grade' => 'nullable|integer',
             ]);
 
             $user->update([
@@ -137,6 +144,9 @@ class UserController extends Controller
                 'email' => $request->email,
                 'nip' => $request->nip,
                 'no_rekening' => $request->no_rekening,
+                'pangkat_golongan' => $request->pangkat_golongan,
+                'jabatan' => $request->jabatan,
+                'grade' => $request->grade,
             ]);
 
             if ($request->wantsJson()) {
@@ -182,7 +192,6 @@ class UserController extends Controller
         try {
             Excel::import(new UsersImport, $request->file('file'));
             
-            // ✅ Kembalikan JSON untuk AJAX Request
             return response()->json([
                 'success' => true,
                 'message' => 'Data pegawai berhasil diimport dari Excel.'
@@ -263,7 +272,6 @@ class UserController extends Controller
     public function destroyArchive($year, $month)
     {
         try {
-            // Hapus semua data di tabel salaries yang cocok dengan bulan dan tahun
             Salary::where('year', $year)->where('month', $month)->delete();
 
             if (request()->wantsJson()) {
@@ -298,26 +306,28 @@ class UserController extends Controller
         }
 
         // 4. Generate Terbilang
-        // (Pastikan fungsi terbilang ada di bawah controller ini)
         $terbilang = ucwords($this->terbilang($salary->take_home_pay) . ' rupiah');
 
-        // === [BARU] 5. AMBIL DATA BENDAHARA DARI DATABASE ===
-        // Mengambil data yang tadi kita buat di tabel settings
+        // 5. AMBIL DATA PENANDATANGAN DARI DATABASE
         $bendahara = [
-            'nama'    => DB::table('settings')->where('key', 'bendahara_nama')->value('value') ?? 'I Wayan Sudirta',
+            'nama'    => DB::table('settings')->where('key', 'bendahara_nama')->value('value') ?? 'I WAYAN OKA PUTRA SUARTAMA',
             'nip'     => DB::table('settings')->where('key', 'bendahara_nip')->value('value') ?? '-',
-            'jabatan' => DB::table('settings')->where('key', 'bendahara_jabatan')->value('value') ?? 'Pejabat Pengelola Administrasi Belanja Pegawai',
+            'jabatan' => DB::table('settings')->where('key', 'bendahara_jabatan')->value('value') ?? 'Bend. Gaji/PPABP',
         ];
-        // ====================================================
+
+        $kabagUmum = [
+            'nama'    => DB::table('settings')->where('key', 'kabag_umum_nama')->value('value') ?? 'I NENGAH SUKADANA',
+            'nip'     => DB::table('settings')->where('key', 'kabag_umum_nip')->value('value') ?? '-',
+            'jabatan' => DB::table('settings')->where('key', 'kabag_umum_jabatan')->value('value') ?? 'Kepala Bagian Umum',
+        ];
 
         // 6. Debug HTML (Opsional)
         if (request()->query('debug_html')) {
-            return view('admin.salary.print', compact('salary', 'terbilang', 'bendahara'));
+            return view('admin.salary.print', compact('salary', 'terbilang', 'bendahara', 'kabagUmum'));
         }
 
         // 7. Generate PDF
-        // Masukkan variabel $bendahara ke dalam compact()
-        $pdf = Pdf::loadView('admin.salary.print', compact('salary', 'terbilang', 'bendahara'));
+        $pdf = Pdf::loadView('admin.salary.print', compact('salary', 'terbilang', 'bendahara', 'kabagUmum'));
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->stream('Slip_Gaji_' . $salary->user->nip . '.pdf');
@@ -328,19 +338,14 @@ class UserController extends Controller
      */
     public function downloadZip($year, $month)
     {
-        // --- OPTIMASI SERVER (PENTING) ---
-        // Naikkan batas memori & waktu eksekusi agar tidak timeout saat generate ratusan PDF
-        ini_set('max_execution_time', 600); // 10 Menit
-        ini_set('memory_limit', '1024M');   // 1 GB RAM
-        // ---------------------------------
+        ini_set('max_execution_time', 600);
+        ini_set('memory_limit', '1024M');
 
-        // 1. Setup Folder (SECURITY UPDATE 🔒)
-        // Kita simpan di folder 'app/private_temp_zip' (bukan public)
-        // Agar file ZIP tidak bisa ditembak/didownload orang lain lewat URL browser.
+        // 1. Setup Folder
         $path = storage_path('app/private_temp_zip'); 
         
         if (!file_exists($path)) {
-            mkdir($path, 0755, true); // 0755 sudah cukup aman untuk folder sistem
+            mkdir($path, 0755, true);
         }
 
         // 2. Ambil data
@@ -353,33 +358,34 @@ class UserController extends Controller
             return back()->with('error', 'Data gaji tidak ditemukan.');
         }
 
-        // === AMBIL DATA BENDAHARA DARI DATABASE ===
+        // 3. AMBIL DATA PENANDATANGAN
         $bendahara = [
-            'nama'    => DB::table('settings')->where('key', 'bendahara_nama')->value('value') ?? 'I Wayan Sudirta',
+            'nama'    => DB::table('settings')->where('key', 'bendahara_nama')->value('value') ?? 'I WAYAN OKA PUTRA SUARTAMA',
             'nip'     => DB::table('settings')->where('key', 'bendahara_nip')->value('value') ?? '-',
-            'jabatan' => DB::table('settings')->where('key', 'bendahara_jabatan')->value('value') ?? 'Pejabat Pengelola Administrasi Belanja Pegawai',
+            'jabatan' => DB::table('settings')->where('key', 'bendahara_jabatan')->value('value') ?? 'Bend. Gaji/PPABP',
         ];
 
-        // 3. Nama File ZIP
+        $kabagUmum = [
+            'nama'    => DB::table('settings')->where('key', 'kabag_umum_nama')->value('value') ?? 'I NENGAH SUKADANA',
+            'nip'     => DB::table('settings')->where('key', 'kabag_umum_nip')->value('value') ?? '-',
+            'jabatan' => DB::table('settings')->where('key', 'kabag_umum_jabatan')->value('value') ?? 'Kepala Bagian Umum',
+        ];
+
+        // 4. Nama File ZIP
         $zipFileName = 'Arsip_Gaji_' . $month . '_' . $year . '.zip';
         $zipFilePath = $path . '/' . $zipFileName;
 
-        // 4. Proses ZIP
+        // 5. Proses ZIP
         $zip = new \ZipArchive;
 
         if ($zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
             
             foreach ($salaries as $salary) {
-                // Generate Terbilang
                 $terbilang = ucwords($this->terbilang($salary->take_home_pay) . ' rupiah');
 
-                // Generate PDF
-                $pdf = Pdf::loadView('admin.salary.print', compact('salary', 'terbilang', 'bendahara'));
+                $pdf = Pdf::loadView('admin.salary.print', compact('salary', 'terbilang', 'bendahara', 'kabagUmum'));
                 
-                // Bersihkan nama file (Hanya huruf, angka, dan strip)
                 $cleanName = preg_replace('/[^A-Za-z0-9\-]/', '_', trim($salary->user->name));
-                
-                // Format nama file dalam ZIP: "NIP_Nama.pdf"
                 $fileNameInsideZip = $salary->user->nip . '_' . $cleanName . '.pdf';
 
                 $zip->addFromString($fileNameInsideZip, $pdf->output());
@@ -390,13 +396,12 @@ class UserController extends Controller
             return back()->with('error', 'Gagal membuat file ZIP (Permission Denied).');
         }
 
-        // 5. Bersihkan Buffer (PENTING agar ZIP tidak corrupt)
+        // 6. Bersihkan Buffer
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 6. Download & Hapus File Sementara
-        // deleteFileAfterSend(true) akan otomatis menghapus file ZIP dari server setelah terkirim
+        // 7. Download & Hapus File Sementara
         return response()->download($zipFilePath)->deleteFileAfterSend(true);
     }
 
